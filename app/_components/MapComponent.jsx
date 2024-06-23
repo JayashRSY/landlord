@@ -34,7 +34,7 @@ const MapComponent = (props) => {
   return (
     <div
       ref={mapContainerRef}
-      class="w-screen-80 h-screen cursor-grab transition-all duration-300 active:cursor-grabbing"
+      class="w-[800px] h-[400px] cursor-grab transition-all duration-300 active:cursor-grabbing"
     />
   );
 };
