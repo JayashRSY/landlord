@@ -19,6 +19,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../../../../utils/supabase/client";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
+import FileUpload from "../_components/FileUpload";
+import { Loader } from "lucide-react";
 
 const EditListing = ({ params }) => {
   //   const params = usePathname();
@@ -26,6 +28,7 @@ const EditListing = ({ params }) => {
   const router = useRouter();
   const [loader, setLoader] = useState(false);
   const [listing, setListing] = useState(null);
+  const [images, setImages] = useState(null);
 
   useEffect(() => {
     user && verifyUser();
@@ -43,8 +46,8 @@ const EditListing = ({ params }) => {
     setListing(data[0]);
   };
   const onSubmitHandler = async (formData) => {
-    setLoader(true);
     try {
+      setLoader(true);
       if (formData) {
         const { data, error } = await supabase
           .from("listing")
@@ -54,6 +57,40 @@ const EditListing = ({ params }) => {
         if (data?.length) {
           console.log("🚀 ~ file: page.jsx:35 ~ data:", data);
           toast("Listing updated successfully!.");
+        }
+        for (const image of images) {
+          const file = image;
+          const fileName = Date.now().toString();
+          const fileExt = fileName.split(".").pop();
+          const { data, error } = await supabase.storage
+            .from("landlord")
+            .upload(`property-images/pi${params.id}${fileName}`, file, {
+              contentType: `images/${fileExt}`,
+              upsert: false,
+            });
+          if (data) {
+            const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL + data.path;
+            const { data, error } = await supabase
+              .from("listingImages")
+              .insert([
+                {
+                  listing_id: params?.id,
+                  url: imageUrl,
+                },
+              ])
+              .select();
+            if (data?.length) {
+              toast("Images uploaded successfully!.");
+            }
+            if (error) {
+              toast(error.message);
+              console.log("🚀 ~ file: page.jsx:23 ~ error:", error);
+            }
+          }
+          if (error) {
+            toast(error.message);
+            console.log("🚀 ~ file: page.jsx:23 ~ error:", error);
+          }
         }
         if (error) {
           toast(error.message);
@@ -123,7 +160,7 @@ const EditListing = ({ params }) => {
         >
           {() => (
             <Form>
-              <div className="grid grid-cols-1 md:grid-cols-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <div className="flex flex-col gap-2">
                   <h2 className="text-lg text-slate-500 align-middle">
                     Rent or Sell?
@@ -309,18 +346,24 @@ const EditListing = ({ params }) => {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-1">
+                <h2 className="text-gray-500">Upload Property Images</h2>
+
+                <FileUpload setImages={setImages} />
+              </div>
               <div className="flex gap-7 mt-5 justify-end">
                 <Button
                   variant="outline"
                   className="text-primary border-primary"
                 >
-                  Save
+                  {loader ? <Loader className="animate-spin" /> : "Save"}
                 </Button>
-                <Button
-                  // @ts-ignore
-                  Button
-                >
-                  Save & Publish
+                <Button>
+                  {loader ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    "Save & Publish"
+                  )}
                 </Button>
               </div>
             </Form>
