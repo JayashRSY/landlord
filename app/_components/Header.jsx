@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -6,13 +7,9 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 const Header = () => {
   const path = usePathname();
   const { user, isSignedIn } = useUser();
-  useEffect(() => {
-    console.log(path);
-  }, []);
   return (
     <div className="p-5 px-10 flex justify-between shadow-sm fixed w-full top-0 z-10 bg-white">
       <div className="flex gap-12 items-center">
