@@ -11,14 +11,8 @@ import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
+import LocationAutocomplete from "../../_components/LocationAutocomplete";
 
-const LocationAutocomplete = dynamic(
-  // @ts-ignore
-  () => import("../../_components/LocationAutocomplete"),
-  {
-    ssr: false,
-  }
-);
 const AddNewListing = () => {
   const router = useRouter();
 
@@ -43,23 +37,21 @@ const AddNewListing = () => {
           ])
           .select();
         if (data?.length) {
-          console.log("🚀 ~ file: page.jsx:35 ~ data:", data);
           toast("Address saved successfully!.");
           router.replace(`/edit-listing/${data[0].id}`);
         }
         if (error) {
           toast(error.message);
-          console.log("🚀 ~ file: page.jsx:23 ~ error:", error);
         }
       }
     } catch (error) {
-      console.log("🚀 ~ file: page.jsx:24 ~ error:", error);
+      toast(error);
     } finally {
       setLoader(false);
     }
   };
   return (
-    <div className=" md:flex justify-evenly p-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="p-5 w-full flex flex-col items-center justify-center">
         <h2 className="font-bold text-2xl">Add New Listing</h2>
         <div className="p-5 w-full rounded-lg border shadow-md flex flex-col gap-5">
@@ -77,7 +69,13 @@ const AddNewListing = () => {
           </Button>
         </div>
       </div>
-      <MapComponent address={address} setAddress={setAddress} />
+      <div className="flex justify-center">
+        <MapComponent
+          lat={address?.lat}
+          lon={address?.lat}
+          setAddress={setAddress}
+        />
+      </div>
     </div>
   );
 };

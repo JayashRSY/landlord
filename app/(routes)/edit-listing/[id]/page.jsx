@@ -21,6 +21,17 @@ import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import FileUpload from "../_components/FileUpload";
 import { Loader } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const EditListing = ({ params }) => {
   //   const params = usePathname();
@@ -37,7 +48,7 @@ const EditListing = ({ params }) => {
   const verifyUser = async () => {
     const { data, error } = await supabase
       .from("listing")
-      .select("*")
+      .select("*, listingImages(listing_id, url)")
       .eq("createdBy", user?.primaryEmailAddress.emailAddress)
       .eq("id", params.id);
     if (!data?.length) {
@@ -55,7 +66,6 @@ const EditListing = ({ params }) => {
           .eq("id", params.id)
           .select();
         if (data?.length) {
-          console.log("🚀 ~ file: page.jsx:35 ~ data:", data);
           toast("Listing updated successfully!.");
         }
         for (const image of images) {
@@ -70,7 +80,7 @@ const EditListing = ({ params }) => {
             });
           if (data) {
             const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL + data.path;
-            const { data, error } = await supabase
+            const { data: imgData, error: imgError } = await supabase
               .from("listingImages")
               .insert([
                 {
@@ -79,31 +89,49 @@ const EditListing = ({ params }) => {
                 },
               ])
               .select();
-            if (data?.length) {
+            if (imgData?.length) {
               toast("Images uploaded successfully!.");
             }
-            if (error) {
-              toast(error.message);
-              console.log("🚀 ~ file: page.jsx:23 ~ error:", error);
+            if (imgError) {
+              toast(imgError.message);
             }
           }
           if (error) {
             toast(error.message);
-            console.log("🚀 ~ file: page.jsx:23 ~ error:", error);
           }
         }
         if (error) {
           toast(error.message);
-          console.log("🚀 ~ file: page.jsx:23 ~ error:", error);
         }
       }
     } catch (error) {
-      console.log("🚀 ~ file: page.jsx:24 ~ error:", error);
       toast(error.message);
     } finally {
       setLoader(false);
     }
   };
+
+  const publishBtnHandler = async () => {
+    try {
+      setLoader(true);
+      const { data, error } = await supabase
+        .from("listing")
+        .update({ isActive: true })
+        .eq("id", params?.id)
+        .select();
+      if (data?.length) {
+        toast("Listing published successfully!.");
+      }
+      if (error) {
+        toast(error.message);
+      }
+    } catch (error) {
+      toast(error);
+    } finally {
+      setLoader(false);
+    }
+  };
+
   //   const PropertyForm = () => {
   const validationSchema = Yup.object().shape({
     type: Yup.string().required("Please select rent or sell"),
@@ -349,22 +377,49 @@ const EditListing = ({ params }) => {
               <div className="grid grid-cols-1">
                 <h2 className="text-gray-500">Upload Property Images</h2>
 
-                <FileUpload setImages={setImages} />
+                <FileUpload
+                  setImages={setImages}
+                  listingImages={listing?.listingImages}
+                />
               </div>
               <div className="flex gap-7 mt-5 justify-end">
                 <Button
+                  disabled={loader}
                   variant="outline"
                   className="text-primary border-primary"
                 >
                   {loader ? <Loader className="animate-spin" /> : "Save"}
                 </Button>
-                <Button>
-                  {loader ? (
-                    <Loader className="animate-spin" />
-                  ) : (
-                    "Save & Publish"
-                  )}
-                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button disabled={loader} type="button">
+                      {loader ? (
+                        <Loader className="animate-spin" />
+                      ) : (
+                        "Save & Publish"
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Ready to Publish??</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Do you really want to save and publish this listing?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={publishBtnHandler}>
+                        {loader ? (
+                          <Loader className="animate-spin" />
+                        ) : (
+                          "Continue"
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </Form>
           )}

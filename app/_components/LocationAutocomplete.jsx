@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { MapPin } from "lucide-react";
+import { toast } from "sonner";
 
-const LocationAutocomplete = (props) => {
+const LocationAutocomplete = ({ address, setAddress }) => {
   const [searchText, setSearchText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const dropdownRef = useRef(null);
@@ -17,7 +18,7 @@ const LocationAutocomplete = (props) => {
           );
           setSuggestions(response.data);
         } catch (error) {
-          console.error("Error fetching suggestions:", error);
+          toast("Error fetching suggestions:");
         }
       } else {
         setSuggestions([]);
@@ -29,12 +30,12 @@ const LocationAutocomplete = (props) => {
 
   const handleInputChange = (event) => {
     setSearchText(event.target.value);
-    props.setAddress(null);
+    setAddress(null);
   };
 
   const handleSuggestionSelect = (address) => {
     setSearchText(address.display_name);
-    props.setAddress(address);
+    setAddress(address);
   };
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -59,7 +60,7 @@ const LocationAutocomplete = (props) => {
           value={searchText}
           onChange={handleInputChange}
         />
-        {!props.address && suggestions.length > 0 && (
+        {!address && suggestions.length > 0 && (
           <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-md shadow-lg">
             {suggestions.map((suggestion, index) => (
               <li
