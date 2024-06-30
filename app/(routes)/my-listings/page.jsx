@@ -78,12 +78,12 @@ const MyListings = () => {
                   <Link href={"/view-listing/" + item.id}>View</Link>
                 </Button>
                 <Button size="sm" className="w-full">
-                  <Link href={"/view-listing/" + item.id}>Edit</Link>
+                  <Link href={"/edit-listing/" + item.id}>Edit</Link>
                 </Button>
                 <Button size="sm" variant="destructive" className="w-full">
-                  <Link href={"/edit-listing/" + item.id}>
+                  {/* <Link href={"" + item.id}> */}
                     <Trash />
-                  </Link>
+                  {/* </Link> */}
                 </Button>
               </div>
             </div>
